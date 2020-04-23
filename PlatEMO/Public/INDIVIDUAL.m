@@ -6,10 +6,11 @@ classdef INDIVIDUAL < handle
 %   constraint violations, and additional properties of an individual.
 %
 % INDIVIDUAL properties:
-%   dec         <read-only>     decision variables of the individual
-%   obj         <read-only>     objective values of the individual
-%   con         <read-only>     constraint violations of the individual
-%   add         <read-only>     additional properties of the individual
+%   dec         <public>     decision variables of the individual
+%   obj         <public>     objective values of the individual
+%   con         <public>     constraint violations of the individual
+%   add         <public>     additional properties of the individual
+%   add2         <public>     additional properties of the individual
 %
 % INDIVIDUAL methods:
 %   INDIVIDUAL	<public>        the constructor, all the properties will be
@@ -22,6 +23,8 @@ classdef INDIVIDUAL < handle
 %                               the population
 %   adds        <public>        get the matrix of additional properties of
 %                               the population
+%   adds2        <public>        get the matrix of additional properties of
+%                               the population
 
 %------------------------------- Copyright --------------------------------
 % Copyright (c) 2018-2019 BIMK Group. You are free to use the PlatEMO for
@@ -32,11 +35,12 @@ classdef INDIVIDUAL < handle
 % Computational Intelligence Magazine, 2017, 12(4): 73-87".
 %--------------------------------------------------------------------------
 
-    properties(SetAccess = private)
+    properties(SetAccess = public)
         dec;        % Decision variables of the individual
         obj;        % Objective values of the individual
         con;        % Constraint violations of the individual
         add;        % Additional properties of the individual
+        add2;        % Additional properties of the individual
     end
     methods
         %% Constructor
@@ -94,8 +98,19 @@ classdef INDIVIDUAL < handle
         %
         %   A = obj.decs returns the matrix of decision variables of the
         %   population obj, where obj is an array of INDIVIDUAL objects.
-        
-            value = cat(1,obj.dec);
+        %change
+            Global = GLOBAL.GetObj();
+            Decs = [];
+            for i = 1:length(obj)
+                if length(obj(i).dec) ~= Global.D
+                    t = [obj(i).dec, zeros(1,Global.D-length(obj(i).dec))];
+                    Decs(i,:) = t;
+                else
+                    Decs(i,:) = obj(i).dec;
+                end
+            end
+
+            value = cat(1,Decs);
         end
         %% Get the matrix of objective values of the population
         function value = objs(obj)
@@ -130,6 +145,22 @@ classdef INDIVIDUAL < handle
                 end
             end
             value = cat(1,obj.add);
+        end
+        
+        function value = adds2(obj,AddProper)
+        %adds - Get the matrix of additional properties of the population.
+        %
+        %   A = obj.adds(AddProper) returns the matrix of additional
+        %   properties of the population obj. If any individual in obj does
+        %   not contain an additional property, assign it a default value
+        %   specified in AddProper.
+
+            for i = 1 : length(obj)
+                if isempty(obj(i).add2)
+                    obj(i).add2 = AddProper(i,:);
+                end
+            end
+            value = cat(1,obj.add2);
         end
     end
 end

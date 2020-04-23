@@ -18,7 +18,7 @@ function Offspring = GA(Parent,Parameter)
 %
 %   Example:
 %       Off = GA(Parent)
-%       Off = GA(Parent.decs,{1,20,1,20})
+%       Off = GA(Parent.decs,{0,20,1,20})
 %
 %   See also GAhalf
 

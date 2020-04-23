@@ -1,4 +1,4 @@
-function SMPSO(Global)
+ function SMPSO(Global)
 % <algorithm> <S>
 % Speed-constrained multi-objective particle swarm optimization
 

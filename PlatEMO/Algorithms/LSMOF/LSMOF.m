@@ -1,4 +1,4 @@
-function LSMOF(Global)
+  function LSMOF(Global)
 % <algorithm> <L>
 % Large-scale multi-objective optimization framework with NSGA-II
 % G1       --- 10 --- The generation of weight optimization with DE

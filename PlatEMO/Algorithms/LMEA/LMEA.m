@@ -1,4 +1,4 @@
-function LMEA(Global)
+ function LMEA(Global)
 % <algorithm> <L>
 % Evolutionary algorithm for large-scale many-objective optimization
 % nSel ---  5 --- Number of selected solutions for decision variable clustering

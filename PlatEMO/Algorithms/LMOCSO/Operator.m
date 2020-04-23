@@ -16,7 +16,7 @@ function Offspring = Operator(Loser,Winner)
     [N,D]     = size(LoserDec);
 	LoserVel  = Loser.adds(zeros(N,D));
     WinnerVel = Winner.adds(zeros(N,D));
-    Global    = GLOBAL.GetObj();
+    Global    = GLOBAL.GetObj(); 
 
     %% Competitive swarm optimizer
     r1     = repmat(rand(N,1),1,D);

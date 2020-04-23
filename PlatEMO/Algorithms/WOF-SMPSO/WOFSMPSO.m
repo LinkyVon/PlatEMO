@@ -1,4 +1,4 @@
-function WOFSMPSO(Global)
+ function WOFSMPSO(Global)
 % <algorithm> <W> 
 % Weighted optimization framework enhanced SMPSO
 % gamma    --- 4    --- Number of groups

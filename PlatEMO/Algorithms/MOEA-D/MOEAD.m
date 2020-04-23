@@ -46,7 +46,7 @@ function MOEAD(Global)
             Z = min(Z,Offspring.obj);
 
             % Update the neighbours
-            switch type
+            switch type 
                 case 1
                     % PBI approach
                     normW   = sqrt(sum(W(P,:).^2,2));

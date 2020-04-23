@@ -10,13 +10,13 @@ classdef GLOBAL < handle
 % GLOBAL properties:
 %   N               <public>	population size
 %   M               <read-only>	number of objectives
-%   D               <read-only>	number of variables
+%   D               <public>	number of variables
 %   lower           <read-only>	lower bound of each decision variable
 %   upper           <read-only>	upper bound of each decision variable
 %   algorithm       <read-only>	algorithm function
 %   problem         <read-only>	problem function
 %   encoding        <read-only> encoding of the problem
-%   evaluated       <read-only>	number of evaluated individuals
+%   evaluated       <public>	number of evaluated individuals
 %   evaluation      <read-only>	maximum number of evaluations
 %   gen             <read-only>	current generation
 %   maxgen          <read-only>	maximum generation
@@ -49,21 +49,22 @@ classdef GLOBAL < handle
 
     properties
         N          = 100;               % Population size
+        D = 2000;                              % Number of decision variables
     end
     properties(SetAccess = ?PROBLEM)
         M;                              % Number of objectives
-        D;                              % Number of decision variables
+        
         lower;                          % Lower bound of each decision variable
         upper;                          % Upper bound of each decision variable
         encoding   = 'real';            % Encoding of the problem
         evaluation = 10000;             % Maximum number of evaluations
     end
-    properties(SetAccess = ?INDIVIDUAL)
+    properties(SetAccess = public)
         evaluated  = 0;                 % Number of evaluated individuals
     end
     properties(SetAccess = private)
-        algorithm  = @NSGAII;       	% Algorithm function
-        problem    = @DTLZ2;            % Problem function
+        algorithm  = @MOEMT;       	% Algorithm function
+        problem    = @LSMOP1;            % Problem function
         gen;                            % Current generation
         maxgen;                         % Maximum generation
         run        = 1;                 % Run number
@@ -356,7 +357,9 @@ classdef GLOBAL < handle
                 delete(tempText);
             end
             % Display the results
-            cla; Draw(cell2mat(MetricValues.(metricName)),'-k.','LineWidth',1.5,'MarkerSize',10);
+            cla;
+%             Draw(log(cell2mat(MetricValues.(metricName))),'-k.','LineWidth',1.5,'MarkerSize',10);
+            Draw(cell2mat(MetricValues.(metricName)),'-k.','LineWidth',1.5,'MarkerSize',10);
             xlabel('Number of Evaluations');
             ylabel(metricName);
             GLOBAL.cb_menu(hObject);

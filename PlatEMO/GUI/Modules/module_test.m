@@ -34,8 +34,8 @@ classdef module_test < module
             panel = Panel.panels(2);
             newLabel(panel,[15 530 180 15,0 0 0 1],'Parameter setting','ForegroundColor',[.7 .7 .7],'FontSize',9);
             obj.control.setPanel = ParameterList(panel,[6 10 194 514,1 1 1 1],note,obj.GUI.icons);
-            obj.control.algPopmenu.index = find(strcmp('NSGAII',get([obj.control.algPopmenu.items.handle],'String')),1);
-            obj.control.proPopmenu.index = find(strcmp('DTLZ2',get([obj.control.proPopmenu.items.handle],'String')),1);
+            obj.control.algPopmenu.index = find(strcmp('MOEMT',get([obj.control.algPopmenu.items.handle],'String')),1);
+            obj.control.proPopmenu.index = find(strcmp('DTLZ1',get([obj.control.proPopmenu.items.handle],'String')),1);
             
             % The third panel
             panel = Panel.panels(3);
