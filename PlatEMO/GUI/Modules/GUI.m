@@ -51,7 +51,7 @@ classdef GUI < handle
             obj.algList = obj.readList2('Algorithms','algorithm');
             obj.proList = obj.readList2('Problems','problem');
             obj.metList = obj.readList2('Metrics','metric');
-            obj.algList = [{'Highlighted'},{{'ARMOEA','MOEMT','IBEA','MOEAD','NSGAII','NSGAIISDR','NSGAIII','RVEA'}};obj.algList];
+            obj.algList = [{'Highlighted'},{{'NSGAII','LSMOF','MOEMT','MOEAD','MOEADVA','SMPSO','WOFSMPSO','LMOCSO'}};obj.algList];
         end
         function List = readList2(obj,folder,class)
             Folders  = regexp(genpath(fullfile(folder)),'[;,:]','split');

@@ -43,7 +43,7 @@ function MOEMT_SMPSO(Global)
         case 2
             Population = subMOEAD(Population,Tasks,rmp);
         case 3
-            Population = subSMPSO(Population,Tasks);
+            Population = subSMPSO(Population,Tasks,rmp);
         case 4
             Population = subCMOPSO(Population,Tasks);
         case 5 

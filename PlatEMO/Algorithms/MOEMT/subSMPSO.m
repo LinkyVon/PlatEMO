@@ -10,6 +10,7 @@ function Population = subSMPSO(Population,Tasks,rmp)
         [Gbest,CrowdDis] = UpdateGbest([Gbest,Population],Global.N);
         Pbest            = UpdatePbest(Pbest,Population);
     end
+    
 end
 
 function Offspring = Operator(Particle,Pbest,Gbest,Global,Tasks,rmp)
@@ -42,20 +43,31 @@ function Offspring = Operator(Particle,Pbest,Gbest,Global,Tasks,rmp)
         if rand(1)<rmp || Particle(i).add == Gbest(i).add
             OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec);
             phi    = max(4,C1+C2);
-            skill_factor = Gbest(i).add;
+            if rand(1)<0.5
+                skill_factor= Gbest(i).add;
+            else
+                skill_factor= Particle(i).add;
+            end
         else
             for j = 1: length(Gbest)
-                if Gbest(j).add ~= Gbest(i).add
-                    GbestDiff = Gbest(j);
-                    GbestDecDiff = (Tasks(GbestDiff.add).A*GbestDiff.dec')';
+                if Gbest(j).add ~= Particle(i).add
+                    GbestDecDiff = (Tasks(Gbest(j).add).A*Gbest(j).dec')';
                     OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec)+ C3.*r3.*(GbestDecDiff-ParticleDec);
                     phi    = max(6,C1+C2+C3);
-                    skill_factor = GbestDiff.add;
+                    if rand(1)<0.5
+                        skill_factor= Gbest(j).add;
+                    else
+                        skill_factor= Particle(i).add;
+                    end
                     break;
                 else
                     OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec);
                     phi    = max(4,C1+C2);
-                    skill_factor = Gbest(i).add;
+                    if rand(1)<0.5
+                        skill_factor= Gbest(i).add;
+                    else
+                        skill_factor= Particle(i).add;
+                    end
                 end
             end
             

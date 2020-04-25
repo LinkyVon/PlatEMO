@@ -1,4 +1,4 @@
-function Population = subSMPSO(Population,Tasks) 
+function Population = subSMPSO(Population,Tasks,rmp) 
     Global  = GLOBAL.GetObj();
     Pbest            = Population;
     [Gbest,CrowdDis] = UpdateGbest(Population,Global.N);
@@ -6,13 +6,13 @@ function Population = subSMPSO(Population,Tasks)
     %% Optimization
     while Global.NotTermination(Gbest)
         ParentPool = TournamentSelection(2,Global.N,-CrowdDis);
-        Population = Operator(Population,Pbest,Gbest(ParentPool),Global,Tasks);
+        Population = Operator(Population,Pbest,Gbest(ParentPool),Global,Tasks,rmp);
         [Gbest,CrowdDis] = UpdateGbest([Gbest,Population],Global.N);
         Pbest            = UpdatePbest(Pbest,Population);
     end
 end
 
-function Offspring = Operator(Particle,Pbest,Gbest,Global,Tasks)
+function Offspring = Operator(Particle,Pbest,Gbest,Global,Tasks,rmp)
 % Particle swarm optimization in SMPSO
     count=1;
     for i = 1:length(Particle)
@@ -35,24 +35,38 @@ function Offspring = Operator(Particle,Pbest,Gbest,Global,Tasks)
         W  = repmat(unifrnd(0.1,0.5),1,D);
         r1 = repmat(rand(1),1,D);
         r2 = repmat(rand(1),1,D);
+        r3 = repmat(rand(1),1,D);
         C1 = repmat(unifrnd(1.5,2.5),1,D);
         C2 = repmat(unifrnd(1.5,2.5),1,D);
-        OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec);
-        phi    = max(4,C1+C2);
+        C3 = repmat(unifrnd(1.5,2.5),1,D);
+        if rand(1)<rmp || Particle(i).add == Gbest(i).add
+            OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec);
+            phi    = max(4,C1+C2);
+            skill_factor = Gbest(i).add;
+        else
+            for j = 1: length(Gbest)
+                if Gbest(j).add ~= Gbest(i).add
+                    GbestDiff = Gbest(j);
+                    GbestDecDiff = (Tasks(GbestDiff.add).A*GbestDiff.dec')';
+                    OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec)+ C3.*r3.*(GbestDecDiff-ParticleDec);
+                    phi    = max(6,C1+C2+C3);
+                    skill_factor = GbestDiff.add;
+                    break;
+                else
+                    OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec);
+                    phi    = max(4,C1+C2);
+                    skill_factor = Gbest(i).add;
+                end
+            end
+            
+        end
         OffVel = OffVel.*2./abs(2-phi-sqrt(phi.^2-4*phi));
         delta  = (Global.upper(1:D)-Global.lower(1:D))/2;
         OffVel = max(min(OffVel,delta),-delta);
         OffDec = ParticleDec + OffVel;
 
-%         %% Deterministic back
-%         Lower  = Global.lower(1:D);
-%         Upper  = Global.upper(1:D);
-%         repair = OffDec < Lower | OffDec > Upper;
-%         OffVel(repair) = 0.001*OffVel(repair);
-%         OffDec = max(min(OffDec,Upper),Lower);
         %% Polynomial mutation
         OffDec = mutate(OffDec,20,1);
-        skill_factor = Gbest(i).add;
         if D ~=  Tasks(skill_factor).D_eff
             OffDec = (Tasks(skill_factor).A_inv*OffDec')';
             OffVel = (Tasks(skill_factor).A_inv*OffVel')';

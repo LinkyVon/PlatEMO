@@ -17,11 +17,11 @@ function Population = subLMOCSO(Population,Tasks,rmp)
         Temp   = Winner(Change);
         Winner(Change) = Loser(Change);
         Loser(Change)  = Temp;
-        Offspring      = Operator(Population(Loser),Population(Winner),Tasks);
+        Offspring      = Operator(Population(Loser),Population(Winner),Tasks,rmp);
         Population     = EnvironmentalSelection([Population,Offspring],V,(Global.gen/Global.maxgen)^2);
     end
 end
-function Offspring = Operator(Loser,Winner,Tasks)
+function Offspring = Operator(Loser,Winner,Tasks,rmp)
 % The competitive swarm optimizer of LMOCSO
     %% Parameter setting
     count=1;
@@ -46,12 +46,39 @@ function Offspring = Operator(Loser,Winner,Tasks)
         % Competitive swarm optimizer
         r1 = rand(1,D);
         r2 = rand(1,D);
-        OffVel = r1.*LoserVel + r2.*(WinnerDec-LoserDec);
+        if rand(1)<rmp || Loser(i).add == Winner(i).add
+            OffVel = r1.*LoserVel + r2.*(WinnerDec-LoserDec);
+            if rand(1)<0.5
+                skill_factor= Winner(i).add;
+            else
+                skill_factor= Loser(i).add;
+            end
+        else
+            for j = 1: length(Winner)
+                if Winner(j).add ~= Loser(i).add
+                    WinnerDecDiff = (Tasks(Winner(j).add).A*Winner(j).dec')';
+                    r3 = rand(1,D);
+                    OffVel = r1.*LoserVel + r2.*(WinnerDec-LoserDec)+r3.*(WinnerDecDiff-LoserDec);
+                    if rand(1)<0.5
+                        skill_factor= Winner(j).add;
+                    else
+                        skill_factor= Loser(i).add;
+                    end
+                    break;
+                else
+                    OffVel = r1.*LoserVel + r2.*(WinnerDec-LoserDec);
+                    if rand(1)<0.5
+                        skill_factor= Winner(i).add;
+                    else
+                        skill_factor= Loser(i).add;
+                    end
+                end
+            end
+        end
         OffDec = LoserDec + OffVel + r1.*(OffVel-LoserVel);
         % Polynomial mutation
         OffDec = mutate(OffDec,20,1);
         WinnerDec = mutate(WinnerDec,20,1);
-        skill_factor = Winner(i).add;
         if D ~=  Tasks(skill_factor).D_eff
             OffDec = (Tasks(skill_factor).A_inv*OffDec')';
             OffVel = (Tasks(skill_factor).A_inv*OffVel')';
@@ -62,9 +89,6 @@ function Offspring = Operator(Loser,Winner,Tasks)
         Offspring(count+1) = Individual(WinnerDec,Tasks,skill_factor,WinnerVel);
         count=count+2;
     end
-    
-
- 
     
 end
 function Fitness = calFitness(PopObj)

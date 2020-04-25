@@ -1,11 +1,11 @@
 function Population = subCMOPSO(Population,Tasks,rmp)
     Global  = GLOBAL.GetObj();
     while Global.NotTermination(Population)
-        Offspring  = Operator(Population,Tasks);
+        Offspring  = Operator(Population,Tasks,rmp);
         Population = EnvironmentalSelection([Population,Offspring],Global.N);
     end
 end
-function Offspring = Operator(Population,Tasks)
+function Offspring = Operator(Population,Tasks,rmp)
 % The particle swarm optimization in CMOPSO
     %% Get leaders 
     Front     = NDSort(Population.objs,inf);    
@@ -39,11 +39,40 @@ function Offspring = Operator(Population,Tasks)
         end
         r1 = rand(1,D);
         r2 = rand(1,D);
-        Off_V = r1.*V + r2.*(winner_Dec-P_Dec);
-        Off_P = P_Dec + Off_V;
+        if rand(1)<rmp || Population(i).add == Population(winner).add
+            Off_V = r1.*V + r2.*(winner_Dec-P_Dec);
+            if rand(1)<0.5
+                skill_factor= Population(winner).add;
+            else
+                skill_factor= Population(i).add;
+            end
+        else
+            for j = 1: length(LeaderSet)
+                leader = LeaderSet(j);
+                if Population(leader).add ~= Population(i).add
+                    leader_Dec =(Tasks(Population(leader).add).A*Population(leader).dec')';
+                    r3 = rand(1,D);
+                    Off_V = r1.*V + r2.*(winner_Dec-P_Dec)+r3.*(leader_Dec-P_Dec);
+                    if rand(1)<0.5
+                        skill_factor= Population(leader).add;
+                    else
+                        skill_factor= Population(i).add;
+                    end
+                    break;
+                else
+                    Off_V = r1.*V + r2.*(winner_Dec-P_Dec);
+                    if rand(1)<0.5
+                        skill_factor= Population(winner).add;
+                    else
+                        skill_factor= Population(i).add;
+                    end
+                    break;
+                end
+            end
+        end
+        Off_P = P_Dec + Off_V;% + r1.*(Off_V-V);
         %Polynomial mutation
         Off_P = mutate(Off_P,20,1);
-        skill_factor = Population(winner).add;
         if D ~=  Tasks(skill_factor).D_eff
             Off_P = (Tasks(skill_factor).A_inv*Off_P')';
             Off_V = (Tasks(skill_factor).A_inv*Off_V')';

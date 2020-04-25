@@ -10,7 +10,7 @@ classdef GLOBAL < handle
 % GLOBAL properties:
 %   N               <public>	population size
 %   M               <read-only>	number of objectives
-%   D               <public>	number of variables
+%   D               <read-only> number of variables
 %   lower           <read-only>	lower bound of each decision variable
 %   upper           <read-only>	upper bound of each decision variable
 %   algorithm       <read-only>	algorithm function
@@ -49,15 +49,15 @@ classdef GLOBAL < handle
 
     properties
         N          = 100;               % Population size
-        D = 2000;                              % Number of decision variables
+        
     end
     properties(SetAccess = ?PROBLEM)
         M;                              % Number of objectives
-        
+        D = 2000;                       % Number of decision variables
         lower;                          % Lower bound of each decision variable
         upper;                          % Upper bound of each decision variable
         encoding   = 'real';            % Encoding of the problem
-        evaluation = 10000;             % Maximum number of evaluations
+        evaluation = 1000000;             % Maximum number of evaluations
     end
     properties(SetAccess = public)
         evaluated  = 0;                 % Number of evaluated individuals
@@ -301,7 +301,7 @@ classdef GLOBAL < handle
             end
         end
     end
-    methods(Access = private, Static)
+    methods(Static)
         %% Display or save the result after the algorithm is terminated
         function Output(obj)
             clc; fprintf('%s on %s, %d objectives %d variables, run %d (%6.2f%%), %.2fs passed...\n',...
