@@ -23,7 +23,7 @@ classdef INDIVIDUAL < handle
 %                               the population
 %   adds        <public>        get the matrix of additional properties of
 %                               the population
-%   adds2        <public>        get the matrix of additional properties of
+%   adds2        <public>       get the matrix of additional properties of
 %                               the population
 
 %------------------------------- Copyright --------------------------------
