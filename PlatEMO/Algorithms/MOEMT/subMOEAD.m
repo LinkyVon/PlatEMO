@@ -36,6 +36,10 @@ function Population = subMOEAD(Population,Tasks,rmp)
                 
             Population(P(g_old>=g_new)) = Offspring;
         end
+        Population = EnvironmentalSelection(Population,length(Population));% only update the rank
+        if mod(Global.gen,10) == 0 
+            Population = UpdateTask(Population,Tasks); 
+        end
     end
 
 end

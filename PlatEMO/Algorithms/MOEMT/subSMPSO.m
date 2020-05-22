@@ -7,6 +7,10 @@ function Population = subSMPSO(Population,Tasks,rmp)
     while Global.NotTermination(Gbest)
         ParentPool = TournamentSelection(2,Global.N,-CrowdDis);
         Population = Operator(Population,Pbest,Gbest(ParentPool),Global,Tasks,rmp);
+        Population = EnvironmentalSelection(Population,length(Population)); %only update the rank
+        if mod(Global.gen,10) == 0 
+            Population = UpdateTask(Population,Tasks); 
+        end 
         [Gbest,CrowdDis] = UpdateGbest([Gbest,Population],Global.N);
         Pbest            = UpdatePbest(Pbest,Population);
     end
@@ -17,19 +21,19 @@ function Offspring = Operator(Particle,Pbest,Gbest,Global,Tasks,rmp)
 % Particle swarm optimization in SMPSO
     count=1;
     for i = 1:length(Particle)
-        Particle(i).adds2(zeros(1,length(Particle(i).dec)));
-        if Particle(i).add == Pbest(i).add && Particle(i).add == Gbest(i).add
-            D =  Tasks(Particle(i).add).D_eff;
+        Particle(i).vels(zeros(1,length(Particle(i).dec)));
+        if Particle(i).skill_factor == Pbest(i).skill_factor && Particle(i).skill_factor == Gbest(i).skill_factor
+            D =  Tasks(Particle(i).skill_factor).D_func;
             ParticleDec = Particle(i).dec;
             PbestDec    = Pbest(i).dec;
             GbestDec    = Gbest(i).dec;
-            ParticleVel = Particle(i).add2;
+            ParticleVel = Particle(i).vel;
         else
-            D =  Tasks(Particle(i).add).D_high;
-            ParticleDec = (Tasks(Particle(i).add).A*Particle(i).dec')';
-            PbestDec    = (Tasks(Pbest(i).add).A*Pbest(i).dec')';
-            GbestDec    = (Tasks(Gbest(i).add).A*Gbest(i).dec')';
-            ParticleVel = (Tasks(Particle(i).add).A*Particle(i).add2')';
+            D =  Tasks(Particle(i).skill_factor).D_high;
+            ParticleDec = Particle(i).inh.dec; %(Tasks(Particle(i).skill_factor).A*Particle(i).dec')';
+            PbestDec    = Pbest(i).inh.dec; %(Tasks(Pbest(i).skill_factor).A*Pbest(i).dec')';
+            GbestDec    = Gbest(i).inh.dec; %(Tasks(Gbest(i).skill_factor).A*Gbest(i).dec')';
+            ParticleVel = (Tasks(Particle(i).skill_factor).A*Particle(i).vel')';
         end
         
         %% Particle swarm optimization
@@ -40,33 +44,33 @@ function Offspring = Operator(Particle,Pbest,Gbest,Global,Tasks,rmp)
         C1 = repmat(unifrnd(1.5,2.5),1,D);
         C2 = repmat(unifrnd(1.5,2.5),1,D);
         C3 = repmat(unifrnd(1.5,2.5),1,D);
-        if rand(1)<rmp || Particle(i).add == Gbest(i).add
+        if rand(1)<rmp || Particle(i).skill_factor == Gbest(i).skill_factor
             OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec);
             phi    = max(4,C1+C2);
             if rand(1)<0.5
-                skill_factor= Gbest(i).add;
+                skill_factor= Gbest(i).skill_factor;
             else
-                skill_factor= Particle(i).add;
+                skill_factor= Particle(i).skill_factor;
             end
         else
             for j = 1: length(Gbest)
-                if Gbest(j).add ~= Particle(i).add
-                    GbestDecDiff = (Tasks(Gbest(j).add).A*Gbest(j).dec')';
+                if Gbest(j).skill_factor ~= Particle(i).skill_factor
+                    GbestDecDiff = Gbest(j).inh.dec; %(Tasks(Gbest(j).skill_factor).A*Gbest(j).dec')';
                     OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec)+ C3.*r3.*(GbestDecDiff-ParticleDec);
                     phi    = max(6,C1+C2+C3);
                     if rand(1)<0.5
-                        skill_factor= Gbest(j).add;
+                        skill_factor= Gbest(j).skill_factor;
                     else
-                        skill_factor= Particle(i).add;
+                        skill_factor= Particle(i).skill_factor;
                     end
                     break;
                 else
                     OffVel = W.*ParticleVel + C1.*r1.*(PbestDec-ParticleDec) + C2.*r2.*(GbestDec-ParticleDec);
                     phi    = max(4,C1+C2);
                     if rand(1)<0.5
-                        skill_factor= Gbest(i).add;
+                        skill_factor= Gbest(i).skill_factor;
                     else
-                        skill_factor= Particle(i).add;
+                        skill_factor= Particle(i).skill_factor;
                     end
                 end
             end
@@ -79,24 +83,14 @@ function Offspring = Operator(Particle,Pbest,Gbest,Global,Tasks,rmp)
 
         %% Polynomial mutation
         OffDec = mutate(OffDec,20,1);
-        if D ~=  Tasks(skill_factor).D_eff
-            OffDec = (Tasks(skill_factor).A_inv*OffDec')';
+        if D ~=  Tasks(skill_factor).D_func
+            %OffDec = (Tasks(skill_factor).A_inv*OffDec')';
             OffVel = (Tasks(skill_factor).A_inv*OffVel')';
         end
-        Offspring(count) = Individual(OffDec,Tasks,skill_factor,OffVel);
+        Offspring(count) = MOEMT_Individual(OffDec,Tasks,skill_factor,OffVel);
         count=count+1;
     end
 end
-
-function [Gbest,CrowdDis] = UpdateGbest(Gbest,N)
-% Update the global best set
-    Gbest    = Gbest(NDSort(Gbest.objs,1)==1);
-    CrowdDis = CrowdingDistance(Gbest.objs);
-    [~,rank] = sort(CrowdDis,'descend');
-    Gbest    = Gbest(rank(1:min(N,length(Gbest))));
-    CrowdDis = CrowdDis(rank(1:min(N,length(Gbest))));
-end
-
 function CrowdDis = CrowdingDistance(PopObj)
 % Calculate the crowding distance of each solution in the same front
     [N,M]    = size(PopObj);  
@@ -112,6 +106,16 @@ function CrowdDis = CrowdingDistance(PopObj)
         end
     end
 end
+
+function [Gbest,CrowdDis] = UpdateGbest(Gbest,N)
+% Update the global best set
+    Gbest    = Gbest(NDSort(Gbest.objs,1)==1);
+    CrowdDis = CrowdingDistance(Gbest.objs);
+    [~,rank] = sort(CrowdDis,'descend');
+    Gbest    = Gbest(rank(1:min(N,length(Gbest))));
+    CrowdDis = CrowdDis(rank(1:min(N,length(Gbest))));
+end
+
 function Pbest = UpdatePbest(Pbest,Population)
 % Update the local best position of each particle
     replace        = ~all(Population.objs>=Pbest.objs,2);

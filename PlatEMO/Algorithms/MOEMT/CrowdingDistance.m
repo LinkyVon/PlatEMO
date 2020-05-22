@@ -12,7 +12,7 @@ function CrowdDis = CrowdingDistance(PopObj,FrontNo)
             CrowdDis(Front(Rank(1)))   = inf;
             CrowdDis(Front(Rank(end))) = inf;
             for j = 2 : length(Front)-1
-                CrowdDis(Front(Rank(j))) = CrowdDis(Front(Rank(j)))+(PopObj(Front(Rank(j+1)),i)-PopObj(Front(Rank(j-1)),i))/(Fmax(i)-Fmin(i));
+                 CrowdDis(Front(Rank(j))) = CrowdDis(Front(Rank(j)))+(PopObj(Front(Rank(j+1)),i)-PopObj(Front(Rank(j-1)),i))/(Fmax(i)-Fmin(i));
             end
         end
     end

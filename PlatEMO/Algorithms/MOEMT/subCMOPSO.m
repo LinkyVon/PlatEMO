@@ -3,6 +3,9 @@ function Population = subCMOPSO(Population,Tasks,rmp)
     while Global.NotTermination(Population)
         Offspring  = Operator(Population,Tasks,rmp);
         Population = EnvironmentalSelection([Population,Offspring],Global.N);
+        if mod(Global.gen,10) == 0 
+            Population = UpdateTask(Population,Tasks); 
+        end 
     end
 end
 function Offspring = Operator(Population,Tasks,rmp)
@@ -17,7 +20,7 @@ function Offspring = Operator(Population,Tasks,rmp)
         P_Dec  = Population(i).dec;     
         D      = length(P_Dec); 
         P_Obj  = Population(i).obj;
-        Population(i).adds2(zeros(1,D)); 
+        Population(i).vels(zeros(1,D)); 
         % Competition according to the angle
         winner = LeaderSet(randperm(length(LeaderSet),2));
         P_winner = Population(winner);
@@ -28,43 +31,43 @@ function Offspring = Operator(Population,Tasks,rmp)
         mask   = (angle1 > angle2);
         winner = ~mask.*winner(1) + mask.*winner(2);
         % Learning
-        if Population(i).add == Population(winner).add
-            V =  Population(i).add2;
+        if Population(i).skill_factor == Population(winner).skill_factor
+            V =  Population(i).vel;
             winner_Dec = Population(winner).dec;
         else
-            D =  Tasks(Population(i).add).D_high;
-            P_Dec  = (Tasks(Population(i).add).A*Population(i).dec')';
-            V =  (Tasks(Population(i).add).A*Population(i).add2')';
-            winner_Dec = (Tasks(Population(winner).add).A*Population(winner).dec')';
+            D =  Tasks(Population(i).skill_factor).D_high;
+            P_Dec  = Population(i).inh.dec; %(Tasks(Population(i).skill_factor).A*Population(i).dec')';
+            V =  (Tasks(Population(i).skill_factor).A*Population(i).vel')';
+            winner_Dec = Population(winner).inh.dec; %(Tasks(Population(winner).skill_factor).A*Population(winner).dec')';
         end
         r1 = rand(1,D);
         r2 = rand(1,D);
-        if rand(1)<rmp || Population(i).add == Population(winner).add
+        if rand(1)<rmp || Population(i).skill_factor == Population(winner).skill_factor
             Off_V = r1.*V + r2.*(winner_Dec-P_Dec);
             if rand(1)<0.5
-                skill_factor= Population(winner).add;
+                skill_factor= Population(winner).skill_factor;
             else
-                skill_factor= Population(i).add;
+                skill_factor= Population(i).skill_factor;
             end
         else
             for j = 1: length(LeaderSet)
                 leader = LeaderSet(j);
-                if Population(leader).add ~= Population(i).add
-                    leader_Dec =(Tasks(Population(leader).add).A*Population(leader).dec')';
+                if Population(leader).skill_factor ~= Population(i).skill_factor
+                    leader_Dec = Population(leader).inh.dec; %(Tasks(Population(leader).skill_factor).A*Population(leader).dec')';
                     r3 = rand(1,D);
                     Off_V = r1.*V + r2.*(winner_Dec-P_Dec)+r3.*(leader_Dec-P_Dec);
                     if rand(1)<0.5
-                        skill_factor= Population(leader).add;
+                        skill_factor= Population(leader).skill_factor;
                     else
-                        skill_factor= Population(i).add;
+                        skill_factor= Population(i).skill_factor;
                     end
                     break;
                 else
                     Off_V = r1.*V + r2.*(winner_Dec-P_Dec);
                     if rand(1)<0.5
-                        skill_factor= Population(winner).add;
+                        skill_factor= Population(winner).skill_factor;
                     else
-                        skill_factor= Population(i).add;
+                        skill_factor= Population(i).skill_factor;
                     end
                     break;
                 end
@@ -73,47 +76,11 @@ function Offspring = Operator(Population,Tasks,rmp)
         Off_P = P_Dec + Off_V;% + r1.*(Off_V-V);
         %Polynomial mutation
         Off_P = mutate(Off_P,20,1);
-        if D ~=  Tasks(skill_factor).D_eff
-            Off_P = (Tasks(skill_factor).A_inv*Off_P')';
+        if D ~=  Tasks(skill_factor).D_func
+            %Off_P = (Tasks(skill_factor).A_inv*Off_P')';
             Off_V = (Tasks(skill_factor).A_inv*Off_V')';
         end
-        Offspring(count) = Individual(Off_P,Tasks,skill_factor,Off_V);
+        Offspring(count) = MOEMT_Individual(Off_P,Tasks,skill_factor,Off_V);
         count=count+1;
-    end
-end
-
-function Population = EnvironmentalSelection(Population,N)
-% The environmental selection of CMOPSO
-    %% Non-dominated sorting
-    [FrontNo,MaxFNo] = NDSort(Population.objs,N);
-    Next = false(1,length(FrontNo));
-    Next(FrontNo<MaxFNo) = true;
-    
-    PopObj = Population.objs;
-    fmax   = max(PopObj(FrontNo==1,:),[],1);
-    fmin   = min(PopObj(FrontNo==1,:),[],1);
-    PopObj = (PopObj-repmat(fmin,size(PopObj,1),1))./repmat(fmax-fmin,size(PopObj,1),1);
-
-    %% Select the solutions in the last front
-    Last = find(FrontNo==MaxFNo);
-    del  = Truncation(PopObj(Last,:),length(Last)-N+sum(Next));
-    Next(Last(~del)) = true;
-    % Population for next generation
-    Population = Population(Next);
-end
-function Del = Truncation(PopObj,K)
-% Select part of the solutions by truncation
-
-    N = size(PopObj,1);
-    
-    %% Truncation
-    Distance = pdist2(PopObj,PopObj);
-    Distance(logical(eye(length(Distance)))) = inf;
-    Del = false(1,N);
-    while sum(Del) < K
-        Remain   = find(~Del);
-        Temp     = sort(Distance(Remain,Remain),2);
-        [~,Rank] = sortrows(Temp);
-        Del(Remain(Rank(1))) = true;
     end
 end

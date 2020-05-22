@@ -11,39 +11,35 @@ function Offspring = OffspringCreation(parent,Tasks,rmp,Parameter)
     for i=1:2:length(parent)
         p1=i;
         p2=i+1;
-        if parent(p1).add==parent(p2).add
+        if parent(p1).skill_factor==parent(p2).skill_factor
             [Decs_1,Decs_2] = crossover(parent(p1).dec,parent(p2).dec,disC,proC); 
             Decs_1 = mutate(Decs_1,disM,proM);
             Decs_2 = mutate(Decs_2,disM,proM);
             if rand(1)<0.5
-                skill_factor= [parent(p1).add,parent(p1).add];
+                skill_factor= [parent(p1).skill_factor,parent(p1).skill_factor];
             else
-                skill_factor= [parent(p2).add,parent(p2).add];
+                skill_factor= [parent(p2).skill_factor,parent(p2).skill_factor];
             end
         else
             if rand(1)<rmp % different skill_factor
-                P1 = (Tasks(parent(p1).add).A*parent(p1).dec')';
-                P2 = (Tasks(parent(p2).add).A*parent(p2).dec')';
+                P1 = parent(p1).inh.dec; %(Tasks(parent(p1).skill_factor).A*parent(p1).dec')';
+                P2 = parent(p2).inh.dec; %(Tasks(parent(p2).skill_factor).A*parent(p2).dec')';
                 [Decs_1,Decs_2] = crossover(P1,P2,disC,proC); 
                 Decs_1 = mutate(Decs_1,disM,proM);
                 Decs_2 = mutate(Decs_2,disM,proM);
                 if rand(1)<0.5
-                    skill_factor= [parent(p1).add,parent(p1).add];
-                    Decs_1 = (Tasks(parent(p1).add).A_inv*Decs_1')';
-                    Decs_2 = (Tasks(parent(p1).add).A_inv*Decs_2')';
+                    skill_factor= [parent(p1).skill_factor,parent(p1).skill_factor];
                 else
-                    skill_factor= [parent(p2).add,parent(p2).add];
-                    Decs_1 = (Tasks(parent(p2).add).A_inv*Decs_1')';
-                    Decs_2 = (Tasks(parent(p2).add).A_inv*Decs_2')';
+                    skill_factor= [parent(p2).skill_factor,parent(p2).skill_factor];
                 end
             else
                 Decs_1 = mutate(parent(p1).dec,disM,proM);
                 Decs_2 = mutate(parent(p2).dec,disM,proM);
-                skill_factor= [parent(p1).add,parent(p2).add];
+                skill_factor= [parent(p1).skill_factor,parent(p2).skill_factor];
             end
         end
-        Offspring(count) = Individual(Decs_1,Tasks,skill_factor(1));
-        Offspring(count+1) = Individual(Decs_2,Tasks,skill_factor(2));
+        Offspring(count) = MOEMT_Individual(Decs_1,Tasks,skill_factor(1));
+        Offspring(count+1) = MOEMT_Individual(Decs_2,Tasks,skill_factor(2));
         count=count+2;
     end     
 end
@@ -93,42 +89,3 @@ function rnvec=mutate(p,mum,prob_mut)
         end
     end            
 end
-% function Offspring = SBX(Parent,Parameter)
-%     %% Parameter setting
-%     if nargin > 1
-%         [proC,disC] = deal(Parameter{:});
-%     else
-%         [proC,disC] = deal(1,20);
-%     end
-%     [N,D]   = size(Parent(1));
-%     beta = zeros(N,D);
-%     mu   = rand(N,D);
-%     beta(mu<=0.5) = (2*mu(mu<=0.5)).^(1/(disC+1));
-%     beta(mu>0.5)  = (2-2*mu(mu>0.5)).^(-1/(disC+1));
-%     beta = beta.*(-1).^randi([0,1],N,D);
-%     beta(rand(N,D)<0.5) = 1;
-%     beta(repmat(rand(N,1)>proC,1,D)) = 1;
-%     Offspring = [(Parent(1)+Parent(2))/2+beta.*(Parent(1)-Parent(2))/2
-%                  (Parent(1)+Parent(2))/2-beta.*(Parent(1)-Parent(2))/2];
-% end
-% function Offspring = mutate(Decs,Parameter)
-%     %% Parameter setting
-%     if nargin > 1
-%         [proM,disM] = deal(Parameter{:});
-%     else
-%         [proM,disM] = deal(1,20);
-%     end
-%     [N,D]   = size(Decs);
-%     Global  = GLOBAL.GetObj();
-%     Lower = repmat(Global.lower(1:D),1*N,1);
-%     Upper = repmat(Global.upper(1:D),1*N,1);
-%     Site  = rand(1*N,D) < proM/D;
-%     mu    = rand(1*N,D);
-%     temp  = Site & mu<=0.5;
-%     Offspring       = min(max(Decs,Lower),Upper);
-%     Offspring(temp) = Offspring(temp)+(Upper(temp)-Lower(temp)).*((2.*mu(temp)+(1-2.*mu(temp)).*...
-%                       (1-(Offspring(temp)-Lower(temp))./(Upper(temp)-Lower(temp))).^(disM+1)).^(1/(disM+1))-1);
-%     temp = Site & mu>0.5; 
-%     Offspring(temp) = Offspring(temp)+(Upper(temp)-Lower(temp)).*(1-(2.*(1-mu(temp))+2.*(mu(temp)-0.5).*...
-%                       (1-(Upper(temp)-Offspring(temp))./(Upper(temp)-Lower(temp))).^(disM+1)).^(1/(disM+1)));
-% end

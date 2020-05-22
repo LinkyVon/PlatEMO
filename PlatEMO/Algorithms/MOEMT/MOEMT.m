@@ -24,17 +24,12 @@ function MOEMT(Global)
     for i=1:N
         D_T = D(skill_factor);
         PopDec = unifrnd(Global.lower(1:D_T),Global.upper(1:D_T)); % problem.Init(N)
-        Population(i) = Individual(PopDec,Tasks,skill_factor);
+        Population(i) = MOEMT_Individual(PopDec,Tasks,skill_factor);
         if mod(i,N/no_of_tasks) == 0
             skill_factor= skill_factor +1;
         end
     end
-    
-%     for i=1:no_of_tasks
-%         P = find([Population.add]==i);
-%         Tasks(i).Pop = Population(P);
-%     end
-    
+
     
     %% Optimization
     switch solver
